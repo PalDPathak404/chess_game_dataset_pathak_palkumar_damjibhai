@@ -1,12 +1,16 @@
 const app = require('./app');
 const config = require('./config');
+const connectDB = require('./config/db');
 
 const PORT = config.port;
 const NODE_ENV = config.env;
 
 
-const startServer = () => {
+const startServer = async () => {
   try {
+    // Connect to database before starting the server
+    await connectDB();
+
     app.listen(PORT, () => {
       console.log(`
        Knightly Backend is running!
