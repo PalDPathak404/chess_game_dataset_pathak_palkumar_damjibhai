@@ -1,7 +1,8 @@
 const Game = require('../models/game.model');
 const ApiFeatures = require('../utils/apiFeatures');
+const mongoose = require('mongoose');
 
-const getAllGames = async (queryString) => {
+const getAllMatches = async (queryString) => {
   const features = new ApiFeatures(Game.find(), queryString)
     .filter()
     .sort()
@@ -20,11 +21,15 @@ const getAllGames = async (queryString) => {
   };
 };
 
-const getGameById = async (id) => {
-  return await Game.findById(id);
+const getMatchById = async (id) => {
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    const match = await Game.findById(id);
+    if (match) return match;
+  }
+  return await Game.findOne({ gameId: id });
 };
 
 module.exports = {
-  getAllGames,
-  getGameById
+  getAllMatches,
+  getMatchById
 };
