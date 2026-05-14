@@ -8,7 +8,7 @@ const seedDataset = async () => {
   try {
     await connectDB();
 
-    const dataPath = path.join(__dirname, '../../data/dataset.json');
+    const dataPath = path.join(__dirname, '../../data/chess_dataset.json');
     
     if (!fs.existsSync(dataPath)) {
       console.error(`Dataset not found at ${dataPath}. Please ensure the JSON file is placed there.`);
@@ -69,8 +69,12 @@ const seedDataset = async () => {
           ply: rawGame.opening_ply
         },
         moves: movesArray,
-        matchCreatedAt: rawGame.created_at ? new Date(rawGame.created_at) : null,
-        lastMoveAt: rawGame.last_move_at ? new Date(rawGame.last_move_at) : null
+        matchCreatedAt: rawGame.created_at
+          ? new Date(Number(rawGame.created_at))
+          : null,
+        lastMoveAt: rawGame.last_move_at
+          ? new Date(Number(rawGame.last_move_at))
+          : null
       });
 
       await newGame.save();
