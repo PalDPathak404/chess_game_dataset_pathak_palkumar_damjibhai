@@ -7,16 +7,19 @@ class ApiFeatures {
 
   filter() {
     const queryObj = { ...this.queryString };
-    const excludedFields = ['page', 'sort', 'limit', 'fields', 'search', 'minRating', 'maxRating'];
+    const excludedFields = ['page', 'sort', 'limit', 'fields', 'search', 'opening', 'minRating', 'maxRating'];
     excludedFields.forEach((el) => delete queryObj[el]);
 
     if (this.queryString.search) {
       const regex = new RegExp(this.queryString.search, 'i');
       queryObj.$or = [
-        { 'opening.name': regex },
         { 'players.white.username': regex },
         { 'players.black.username': regex }
       ];
+    }
+
+    if (this.queryString.opening) {
+      queryObj['opening.name'] = new RegExp(this.queryString.opening, 'i');
     }
 
     if (this.queryString.minRating || this.queryString.maxRating) {
