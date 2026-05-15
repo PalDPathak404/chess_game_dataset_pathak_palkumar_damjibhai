@@ -1,5 +1,6 @@
 const express = require('express');
 const matchRoutes = require('./match.routes');
+const playerRoutes = require('./player.routes');
 const router = express.Router();
 
 router.get('/health', (req, res) => {
@@ -10,5 +11,6 @@ router.get('/health', (req, res) => {
 });
 
 router.use('/matches', matchRoutes);
+router.use('/players', playerRoutes);
 
 module.exports = router;
