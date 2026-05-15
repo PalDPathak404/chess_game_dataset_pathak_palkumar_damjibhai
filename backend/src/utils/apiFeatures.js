@@ -7,19 +7,21 @@ class ApiFeatures {
 
   filter() {
     const queryObj = { ...this.queryString };
-    const excludedFields = ['page', 'sort', 'limit', 'fields', 'search', 'opening', 'minRating', 'maxRating'];
+    const excludedFields = ['page', 'sort', 'sortBy', 'order', 'limit', 'fields', 'search', 'opening', 'minRating', 'maxRating'];
     excludedFields.forEach((el) => delete queryObj[el]);
 
     if (this.queryString.search) {
-      const regex = new RegExp(this.queryString.search, 'i');
       queryObj.$or = [
-        { 'players.white.username': regex },
-        { 'players.black.username': regex }
+        { 'players.white.username': { $regex: this.queryString.search, $options: 'i' } },
+        { 'players.black.username': { $regex: this.queryString.search, $options: 'i' } }
       ];
     }
 
     if (this.queryString.opening) {
-      queryObj['opening.name'] = new RegExp(this.queryString.opening, 'i');
+      queryObj['opening.name'] = {
+        $regex: this.queryString.opening,
+        $options: 'i'
+      };
     }
 
     if (this.queryString.minRating || this.queryString.maxRating) {
@@ -50,7 +52,11 @@ class ApiFeatures {
   }
 
   sort() {
-    if (this.queryString.sort) {
+    if (this.queryString.sortBy) {
+      const sortByField = this.queryString.sortBy;
+      const order = this.queryString.order === 'asc' ? '' : '-';
+      this.query = this.query.sort(`${order}${sortByField}`);
+    } else if (this.queryString.sort) {
       const sortBy = this.queryString.sort.split(',').join(' ');
       this.query = this.query.sort(sortBy);
     } else {
