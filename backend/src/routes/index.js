@@ -4,6 +4,7 @@ const playerRoutes = require('./player.routes');
 const analyticsRoutes = require('./analytics.routes');
 const searchRoutes = require('./search.routes');
 const reviewRoutes = require('./review.routes');
+const importRoutes = require('./import.routes');
 const router = express.Router();
 
 router.get('/health', (req, res) => {
@@ -18,5 +19,6 @@ router.use('/players', playerRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/search', searchRoutes);
 router.use('/reviews', reviewRoutes);
+router.use('/import', importRoutes);
 
 module.exports = router;
