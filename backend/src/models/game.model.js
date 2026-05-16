@@ -25,11 +25,11 @@ const gameSchema = new mongoose.Schema({
   players: {
     white: {
       username: { type: String, required: true, index: true },
-      rating: { type: Number, required: true, index: true }
+      rating: { type: Number, default: 0, index: true }
     },
     black: {
       username: { type: String, required: true, index: true },
-      rating: { type: Number, required: true, index: true }
+      rating: { type: Number, default: 0, index: true }
     }
   },
   opening: {
@@ -39,7 +39,20 @@ const gameSchema = new mongoose.Schema({
   },
   moves: [moveSchema],
   matchCreatedAt: { type: Date, index: true },
-  lastMoveAt: { type: Date }
+  lastMoveAt: { type: Date },
+  sourceType: {
+    type: String,
+    enum: ['dataset', 'imported'],
+    default: 'dataset',
+    index: true
+  },
+  importMetadata: {
+    originalPgn: { type: String },
+    importedAt: { type: Date },
+    importedBy: { type: String, default: 'anonymous' },
+    site: { type: String },
+    event: { type: String }
+  }
 }, { 
   timestamps: true
 });
@@ -47,5 +60,6 @@ const gameSchema = new mongoose.Schema({
 gameSchema.index({ 'players.white.rating': -1, winner: 1 });
 gameSchema.index({ 'players.black.rating': -1, winner: 1 });
 gameSchema.index({ 'opening.name': 1, matchCreatedAt: -1 });
+gameSchema.index({ sourceType: 1, matchCreatedAt: -1 });
 
 module.exports = mongoose.model('Game', gameSchema);
