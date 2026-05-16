@@ -1,5 +1,14 @@
 const Review = require('../models/review.model');
 const Game = require('../models/game.model');
+const mongoose = require('mongoose');
+
+const resolveMatch = async (matchId) => {
+  if (mongoose.Types.ObjectId.isValid(matchId)) {
+    const match = await Game.findById(matchId);
+    if (match) return match;
+  }
+  return await Game.findOne({ gameId: matchId });
+};
 
 const CLASSIFICATIONS = ['brilliant', 'great', 'good', 'book', 'inaccuracy', 'mistake', 'blunder', 'neutral'];
 const CLASSIFICATION_WEIGHTS = [0.02, 0.08, 0.2, 0.15, 0.12, 0.08, 0.03, 0.32];
@@ -76,16 +85,16 @@ const generateMockAnalysis = (moves) => {
 };
 
 const createReview = async (matchId, reviewType = 'full') => {
-  const match = await Game.findById(matchId);
+  const match = await resolveMatch(matchId);
   if (!match) return null;
 
-  const existingReview = await Review.findOne({ match: matchId, reviewType, status: 'completed' });
+  const existingReview = await Review.findOne({ match: match._id, reviewType, status: 'completed' });
   if (existingReview) return existingReview;
 
   const { analyzedMoves, summary } = generateMockAnalysis(match.moves);
 
   const review = await Review.create({
-    match: matchId,
+    match: match._id,
     reviewType,
     status: 'completed',
     progress: 100,
@@ -101,7 +110,9 @@ const getReviewById = async (reviewId) => {
 };
 
 const getReviewByMatch = async (matchId) => {
-  return await Review.findOne({ match: matchId }).sort({ createdAt: -1 }).populate('match', 'gameId players opening winner victoryStatus turns');
+  const match = await resolveMatch(matchId);
+  if (!match) return null;
+  return await Review.findOne({ match: match._id }).sort({ createdAt: -1 }).populate('match', 'gameId players opening winner victoryStatus turns');
 };
 
 module.exports = {

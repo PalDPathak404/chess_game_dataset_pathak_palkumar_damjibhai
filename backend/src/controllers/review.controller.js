@@ -1,16 +1,8 @@
 const reviewService = require('../services/review.service');
-const mongoose = require('mongoose');
 
 const createReview = async (req, res) => {
   try {
     const { matchId } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(matchId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid match ID format'
-      });
-    }
 
     const review = await reviewService.createReview(matchId, req.query.type);
 
@@ -38,13 +30,6 @@ const getReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(reviewId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid review ID format'
-      });
-    }
-
     const review = await reviewService.getReviewById(reviewId);
 
     if (!review) {
@@ -70,13 +55,6 @@ const getReview = async (req, res) => {
 const getReviewByMatch = async (req, res) => {
   try {
     const { matchId } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(matchId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid match ID format'
-      });
-    }
 
     const review = await reviewService.getReviewByMatch(matchId);
 
