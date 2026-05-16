@@ -55,8 +55,20 @@ const generateImportId = () => {
   return `imp_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 6)}`;
 };
 
+const isValidChessMove = (notation) => {
+  // Lightweight regex to catch the vast majority of valid standard algebraic notation
+  // Matches: e4, Nf3, exd5, O-O, O-O-O, R1xd4, e8=Q#, etc.
+  const moveRegex = /^([KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](=[QRBN])?[+#]?|O-O(-O)?[+#]?)$/;
+  return moveRegex.test(notation);
+};
+
 const parsePgn = (rawPgn) => {
   if (!rawPgn || typeof rawPgn !== 'string' || rawPgn.trim().length === 0) {
+    return null;
+  }
+
+  // Quick structural check: real PGNs almost always contain a first move marker
+  if (!/\b1\.\s*/.test(rawPgn)) {
     return null;
   }
 
@@ -64,6 +76,16 @@ const parsePgn = (rawPgn) => {
   const moves = parseMoveText(rawPgn);
 
   if (moves.length === 0) return null;
+
+  // Sanity validation: ensure the token stream actually looks like chess moves.
+  // We use a 50% threshold to gracefully handle occasional weird annotations/typos
+  // while aggressively rejecting "hello world" or completely random text.
+  const validMovesCount = moves.filter(m => isValidChessMove(m.notation)).length;
+  const validRatio = validMovesCount / moves.length;
+
+  if (validRatio < 0.5) {
+    return null;
+  }
 
   const { winner, victoryStatus } = determineResult(headers);
 
