@@ -3,6 +3,7 @@ const matchRoutes = require('./match.routes');
 const playerRoutes = require('./player.routes');
 const analyticsRoutes = require('./analytics.routes');
 const searchRoutes = require('./search.routes');
+const reviewRoutes = require('./review.routes');
 const router = express.Router();
 
 router.get('/health', (req, res) => {
@@ -16,5 +17,6 @@ router.use('/matches', matchRoutes);
 router.use('/players', playerRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/search', searchRoutes);
+router.use('/reviews', reviewRoutes);
 
 module.exports = router;
