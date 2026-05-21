@@ -84,23 +84,75 @@ const generateMockAnalysis = (moves) => {
   return { analyzedMoves, summary };
 };
 
+const PROGRESS_STAGES = [
+  { progress: 25, delay: 500 },
+  { progress: 50, delay: 800 },
+  { progress: 75, delay: 600 },
+  { progress: 100, delay: 400 }
+];
+
+const simulateAsyncProcessing = async (reviewId, match) => {
+  try {
+    const startTime = Date.now();
+
+    await Review.findByIdAndUpdate(reviewId, {
+      status: 'processing',
+      progress: 0,
+      'processingTimestamps.processingStartedAt': new Date()
+    });
+
+    for (const stage of PROGRESS_STAGES) {
+      await new Promise((resolve) => setTimeout(resolve, stage.delay));
+
+      if (stage.progress < 100) {
+        await Review.findByIdAndUpdate(reviewId, { progress: stage.progress });
+      }
+    }
+
+    const { analyzedMoves, summary } = generateMockAnalysis(match.moves);
+    const processingTimeMs = Date.now() - startTime;
+
+    await Review.findByIdAndUpdate(reviewId, {
+      status: 'completed',
+      progress: 100,
+      analyzedMoves,
+      summary,
+      'processingTimestamps.completedAt': new Date(),
+      'processingMetadata.engine': 'mock-v1',
+      'processingMetadata.processingTimeMs': processingTimeMs
+    });
+  } catch (error) {
+    await Review.findByIdAndUpdate(reviewId, {
+      status: 'failed',
+      errorMessage: error.message || 'Processing failed unexpectedly',
+      'processingTimestamps.failedAt': new Date(),
+      $inc: { retryCount: 1 }
+    });
+  }
+};
+
 const createReview = async (matchId, reviewType = 'full') => {
   const match = await resolveMatch(matchId);
   if (!match) return null;
 
-  const existingReview = await Review.findOne({ match: match._id, reviewType, status: 'completed' });
+  const existingReview = await Review.findOne({
+    match: match._id,
+    reviewType,
+    status: { $in: ['queued', 'processing', 'completed'] }
+  });
   if (existingReview) return existingReview;
-
-  const { analyzedMoves, summary } = generateMockAnalysis(match.moves);
 
   const review = await Review.create({
     match: match._id,
     reviewType,
-    status: 'completed',
-    progress: 100,
-    analyzedMoves,
-    summary
+    status: 'queued',
+    progress: 0,
+    processingTimestamps: {
+      queuedAt: new Date()
+    }
   });
+
+  simulateAsyncProcessing(review._id, match);
 
   return review;
 };
@@ -115,8 +167,13 @@ const getReviewByMatch = async (matchId) => {
   return await Review.findOne({ match: match._id }).sort({ createdAt: -1 }).populate('match', 'gameId players opening winner victoryStatus turns');
 };
 
+const getReviewStatus = async (reviewId) => {
+  return await Review.findById(reviewId).select('status progress processingTimestamps processingMetadata retryCount errorMessage reviewType match createdAt updatedAt');
+};
+
 module.exports = {
   createReview,
   getReviewById,
-  getReviewByMatch
+  getReviewByMatch,
+  getReviewStatus
 };

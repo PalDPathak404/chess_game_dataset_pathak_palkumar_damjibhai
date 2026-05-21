@@ -16,7 +16,15 @@ const importPgnWithReview = async (rawPgn) => {
 
   const review = await reviewService.createReview(match._id.toString());
 
-  return { match, review };
+  return {
+    match,
+    review: {
+      reviewId: review._id,
+      status: review.status,
+      progress: review.progress,
+      reviewType: review.reviewType
+    }
+  };
 };
 
 module.exports = {
