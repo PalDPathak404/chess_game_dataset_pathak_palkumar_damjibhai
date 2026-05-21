@@ -13,9 +13,17 @@ const createReview = async (req, res) => {
       });
     }
 
-    res.status(201).json({
+    const isNew = review.status === 'queued' && review.progress === 0;
+
+    res.status(isNew ? 202 : 200).json({
       success: true,
-      data: review
+      message: isNew ? 'Review queued for processing' : 'Review already exists',
+      data: {
+        reviewId: review._id,
+        status: review.status,
+        progress: review.progress,
+        reviewType: review.reviewType
+      }
     });
   } catch (error) {
     res.status(500).json({
@@ -78,8 +86,35 @@ const getReviewByMatch = async (req, res) => {
   }
 };
 
+const getReviewStatus = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+
+    const status = await reviewService.getReviewStatus(reviewId);
+
+    if (!status) {
+      return res.status(404).json({
+        success: false,
+        message: 'Review not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: status
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch review status',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createReview,
   getReview,
-  getReviewByMatch
+  getReviewByMatch,
+  getReviewStatus
 };

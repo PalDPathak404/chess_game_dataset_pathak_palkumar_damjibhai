@@ -6,6 +6,9 @@ const router = express.Router();
 router.route('/create/:matchId')
   .post(reviewController.createReview);
 
+router.route('/status/:reviewId')
+  .get(reviewController.getReviewStatus);
+
 router.route('/match/:matchId')
   .get(reviewController.getReviewByMatch);
 

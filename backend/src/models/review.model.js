@@ -28,8 +28,8 @@ const reviewSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'completed', 'failed'],
-    default: 'pending',
+    enum: ['queued', 'processing', 'completed', 'failed'],
+    default: 'queued',
     index: true
   },
   progress: { type: Number, default: 0, min: 0, max: 100 },
@@ -45,11 +45,28 @@ const reviewSchema = new mongoose.Schema({
     openingAccuracy: { type: String, default: '' },
     endgameAccuracy: { type: String, default: '' },
     keyInsights: [{ type: String }]
-  }
+  },
+  processingTimestamps: {
+    queuedAt: { type: Date },
+    processingStartedAt: { type: Date },
+    completedAt: { type: Date },
+    failedAt: { type: Date }
+  },
+  processingMetadata: {
+    engine: { type: String, default: '' },
+    engineVersion: { type: String, default: '' },
+    depth: { type: Number, default: 0 },
+    processingTimeMs: { type: Number, default: 0 },
+    workerId: { type: String, default: '' }
+  },
+  retryCount: { type: Number, default: 0 },
+  maxRetries: { type: Number, default: 3 },
+  errorMessage: { type: String, default: '' }
 }, {
   timestamps: true
 });
 
 reviewSchema.index({ match: 1, createdAt: -1 });
+reviewSchema.index({ status: 1, createdAt: 1 });
 
 module.exports = mongoose.model('Review', reviewSchema);
