@@ -5,6 +5,7 @@ const analyticsRoutes = require('./analytics.routes');
 const searchRoutes = require('./search.routes');
 const reviewRoutes = require('./review.routes');
 const importRoutes = require('./import.routes');
+const chatRoutes = require('./chat.routes');
 const router = express.Router();
 
 router.get('/health', (req, res) => {
@@ -20,5 +21,6 @@ router.use('/analytics', analyticsRoutes);
 router.use('/search', searchRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/import', importRoutes);
+router.use('/chat', chatRoutes);
 
 module.exports = router;
