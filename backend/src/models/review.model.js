@@ -7,7 +7,7 @@ const moveAnalysisSchema = new mongoose.Schema({
   evaluation: { type: Number, default: 0 },
   classification: {
     type: String,
-    enum: ['brilliant', 'great', 'good', 'book', 'inaccuracy', 'mistake', 'blunder', 'neutral'],
+    enum: ['brilliant', 'great', 'best', 'good', 'book', 'forced', 'inaccuracy', 'mistake', 'blunder', 'neutral'],
     default: 'neutral'
   },
   explanation: { type: String, default: '' },
@@ -38,7 +38,10 @@ const reviewSchema = new mongoose.Schema({
     totalMoves: { type: Number, default: 0 },
     brilliantMoves: { type: Number, default: 0 },
     greatMoves: { type: Number, default: 0 },
+    bestMoves: { type: Number, default: 0 },
     goodMoves: { type: Number, default: 0 },
+    bookMoves: { type: Number, default: 0 },
+    forcedMoves: { type: Number, default: 0 },
     inaccuracies: { type: Number, default: 0 },
     mistakes: { type: Number, default: 0 },
     blunders: { type: Number, default: 0 },
@@ -56,6 +59,9 @@ const reviewSchema = new mongoose.Schema({
     engine: { type: String, default: '' },
     engineVersion: { type: String, default: '' },
     depth: { type: Number, default: 0 },
+    nodesSearched: { type: Number, default: 0 },
+    evaluationSource: { type: String, default: '' },
+    confidence: { type: Number, default: 0, min: 0, max: 1 },
     processingTimeMs: { type: Number, default: 0 },
     workerId: { type: String, default: '' }
   },
