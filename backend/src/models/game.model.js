@@ -50,6 +50,11 @@ const gameSchema = new mongoose.Schema({
     originalPgn: { type: String },
     importedAt: { type: Date },
     importedBy: { type: String, default: 'anonymous' },
+    importedByUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
     site: { type: String },
     event: { type: String }
   }
