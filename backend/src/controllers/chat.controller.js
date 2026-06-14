@@ -7,7 +7,8 @@ const createSession = async (req, res) => {
       return res.status(400).json({ success: false, message: 'reviewId is required' });
     }
     
-    const session = await chatService.createSession(reviewId);
+    const userId = req.user?.userId;
+    const session = await chatService.createSession(reviewId, userId);
     
     res.status(201).json({ 
       success: true, 

@@ -70,7 +70,7 @@ const simulateAsyncProcessing = async (reviewId, match, reviewType) => {
   }
 };
 
-const createReview = async (matchId, reviewType = 'full') => {
+const createReview = async (matchId, reviewType = 'full', userId = null) => {
   const match = await resolveMatch(matchId);
   if (!match) return null;
 
@@ -81,7 +81,7 @@ const createReview = async (matchId, reviewType = 'full') => {
   });
   if (existingReview) return existingReview;
 
-  const review = await Review.create({
+  const reviewPayload = {
     match: match._id,
     reviewType,
     status: 'queued',
@@ -89,7 +89,13 @@ const createReview = async (matchId, reviewType = 'full') => {
     processingTimestamps: {
       queuedAt: new Date()
     }
-  });
+  };
+
+  if (userId) {
+    reviewPayload.createdBy = userId;
+  }
+
+  const review = await Review.create(reviewPayload);
 
   simulateAsyncProcessing(review._id, match, reviewType);
 

@@ -2,11 +2,11 @@ const ChatSession = require('../models/chat.model');
 const Review = require('../models/review.model');
 const { generateMockedResponse } = require('../utils/aiResponse.util');
 
-const createSession = async (reviewId) => {
+const createSession = async (reviewId, userId = null) => {
   const review = await Review.findById(reviewId);
   if (!review) throw new Error('Review not found');
 
-  const session = await ChatSession.create({
+  const sessionPayload = {
     review: reviewId,
     messages: [
       {
@@ -20,7 +20,13 @@ const createSession = async (reviewId) => {
         context: { coachingCategory: 'greeting' }
       }
     ]
-  });
+  };
+
+  if (userId) {
+    sessionPayload.createdBy = userId;
+  }
+
+  const session = await ChatSession.create(sessionPayload);
 
   return session;
 };

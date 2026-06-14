@@ -7,6 +7,8 @@ const reviewRoutes = require('./review.routes');
 const importRoutes = require('./import.routes');
 const chatRoutes = require('./chat.routes');
 const authRoutes = require('./auth.routes');
+const dashboardRoutes = require('./dashboard.routes');
+
 const router = express.Router();
 
 router.get('/health', (req, res) => {
@@ -24,5 +26,6 @@ router.use('/reviews', reviewRoutes);
 router.use('/import', importRoutes);
 router.use('/chat', chatRoutes);
 router.use('/auth', authRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 module.exports = router;
