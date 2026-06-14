@@ -6,6 +6,7 @@ const searchRoutes = require('./search.routes');
 const reviewRoutes = require('./review.routes');
 const importRoutes = require('./import.routes');
 const chatRoutes = require('./chat.routes');
+const authRoutes = require('./auth.routes');
 const router = express.Router();
 
 router.get('/health', (req, res) => {
@@ -22,5 +23,6 @@ router.use('/search', searchRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/import', importRoutes);
 router.use('/chat', chatRoutes);
+router.use('/auth', authRoutes);
 
 module.exports = router;

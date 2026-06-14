@@ -67,7 +67,12 @@ const reviewSchema = new mongoose.Schema({
   },
   retryCount: { type: Number, default: 0 },
   maxRetries: { type: Number, default: 3 },
-  errorMessage: { type: String, default: '' }
+  errorMessage: { type: String, default: '' },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  }
 }, {
   timestamps: true
 });
