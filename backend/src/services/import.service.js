@@ -2,19 +2,24 @@ const Game = require('../models/game.model');
 const { parsePgn } = require('../utils/pgnParser');
 const reviewService = require('./review.service');
 
-const importPgn = async (rawPgn) => {
+const importPgn = async (rawPgn, userId = null) => {
   const parsed = parsePgn(rawPgn);
   if (!parsed) return null;
+
+  if (userId) {
+    parsed.importMetadata = parsed.importMetadata || {};
+    parsed.importMetadata.importedByUser = userId;
+  }
 
   const match = await Game.create(parsed);
   return match;
 };
 
-const importPgnWithReview = async (rawPgn) => {
-  const match = await importPgn(rawPgn);
+const importPgnWithReview = async (rawPgn, userId = null) => {
+  const match = await importPgn(rawPgn, userId);
   if (!match) return null;
 
-  const review = await reviewService.createReview(match._id.toString());
+  const review = await reviewService.createReview(match._id.toString(), 'full', userId);
 
   return {
     match,

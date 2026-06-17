@@ -33,4 +33,24 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const optionalProtect = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next();
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyToken(token);
+
+    const user = await User.findById(decoded.userId);
+    if (user) {
+      req.user = decoded;
+    }
+    next();
+  } catch (error) {
+    next(); // Ignore errors (e.g. expired token) and proceed as anonymous
+  }
+};
+
+module.exports = { protect, optionalProtect };

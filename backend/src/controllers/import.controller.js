@@ -11,7 +11,8 @@ const importPgn = async (req, res) => {
       });
     }
 
-    const match = await importService.importPgn(pgn);
+    const userId = req.user?.userId;
+    const match = await importService.importPgn(pgn, userId);
 
     if (!match) {
       return res.status(422).json({
@@ -44,7 +45,8 @@ const importPgnWithReview = async (req, res) => {
       });
     }
 
-    const result = await importService.importPgnWithReview(pgn);
+    const userId = req.user?.userId;
+    const result = await importService.importPgnWithReview(pgn, userId);
 
     if (!result) {
       return res.status(422).json({

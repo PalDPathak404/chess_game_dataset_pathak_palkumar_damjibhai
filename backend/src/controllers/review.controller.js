@@ -3,8 +3,9 @@ const reviewService = require('../services/review.service');
 const createReview = async (req, res) => {
   try {
     const { matchId } = req.params;
+    const userId = req.user?.userId;
 
-    const review = await reviewService.createReview(matchId, req.query.type);
+    const review = await reviewService.createReview(matchId, req.query.type, userId);
 
     if (!review) {
       return res.status(404).json({
