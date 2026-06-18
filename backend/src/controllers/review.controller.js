@@ -3,7 +3,7 @@ const reviewService = require('../services/review.service');
 const createReview = async (req, res) => {
   try {
     const { matchId } = req.params;
-    const userId = req.user?.userId;
+    const userId = req.user?._id;
 
     const review = await reviewService.createReview(matchId, req.query.type, userId);
 
@@ -113,9 +113,28 @@ const getReviewStatus = async (req, res) => {
   }
 };
 
+const getUserReviews = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const reviews = await reviewService.getReviewsByUser(userId);
+
+    res.status(200).json({
+      success: true,
+      data: reviews
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user reviews',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createReview,
   getReview,
   getReviewByMatch,
-  getReviewStatus
+  getReviewStatus,
+  getUserReviews
 };

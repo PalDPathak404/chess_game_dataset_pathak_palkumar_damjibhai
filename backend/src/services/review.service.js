@@ -116,9 +116,17 @@ const getReviewStatus = async (reviewId) => {
   return await Review.findById(reviewId).select('status progress processingTimestamps processingMetadata retryCount errorMessage reviewType match createdAt updatedAt');
 };
 
+const getReviewsByUser = async (userId) => {
+  return await Review.find({ createdBy: userId })
+    .select('match reviewType status progress summary createdAt')
+    .sort({ createdAt: -1 })
+    .lean();
+};
+
 module.exports = {
   createReview,
   getReviewById,
   getReviewByMatch,
-  getReviewStatus
+  getReviewStatus,
+  getReviewsByUser
 };
