@@ -24,6 +24,7 @@ const protect = async (req, res, next) => {
     }
 
     req.user = decoded;
+    req.user._id = user._id;
     next();
   } catch (error) {
     res.status(401).json({
@@ -33,7 +34,7 @@ const protect = async (req, res, next) => {
   }
 };
 
-const optionalProtect = async (req, res, next) => {
+const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -46,6 +47,7 @@ const optionalProtect = async (req, res, next) => {
     const user = await User.findById(decoded.userId);
     if (user) {
       req.user = decoded;
+      req.user._id = user._id;
     }
     next();
   } catch (error) {
@@ -53,4 +55,4 @@ const optionalProtect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect, optionalProtect };
+module.exports = { protect, optionalAuth };

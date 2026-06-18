@@ -1,11 +1,11 @@
 const express = require('express');
 const reviewController = require('../controllers/review.controller');
-const { optionalProtect } = require('../middleware/auth.middleware');
+const { optionalAuth } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
 router.route('/create/:matchId')
-  .post(optionalProtect, reviewController.createReview);
+  .post(optionalAuth, reviewController.createReview);
 
 router.route('/status/:reviewId')
   .get(reviewController.getReviewStatus);
