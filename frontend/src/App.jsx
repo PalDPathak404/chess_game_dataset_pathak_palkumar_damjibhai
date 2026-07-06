@@ -6,6 +6,7 @@ import WorkspaceLayout from './layouts/WorkspaceLayout';
 import { Home, NotFound } from './pages';
 import { Login, Register } from './pages/auth';
 import { Workspace } from './pages/workspace';
+import { ReviewWorkspace } from './pages/review';
 import './styles/index.css';
 
 function App() {
@@ -23,7 +24,7 @@ function App() {
           {/* Protected Workspace Routes */}
           <Route path="/workspace" element={<WorkspaceLayout />}>
             <Route index element={<Workspace />} />
-            {/* Future nested routes will go here (reviews, games, etc) */}
+            <Route path="review/:id" element={<ReviewWorkspace />} />
           </Route>
 
           {/* Catch-all 404 */}
