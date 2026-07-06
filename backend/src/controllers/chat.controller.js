@@ -6,20 +6,20 @@ const createSession = async (req, res) => {
     if (!reviewId) {
       return res.status(400).json({ success: false, message: 'reviewId is required' });
     }
-    
-    const userId = req.user?.userId;
+
+    const userId = req.user?._id ?? null;
     const session = await chatService.createSession(reviewId, userId);
-    
-    res.status(201).json({ 
-      success: true, 
+
+    res.status(201).json({
+      success: true,
       message: 'Chat session created',
-      data: session 
+      data: session
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to create chat session', 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create chat session',
+      error: error.message
     });
   }
 };
@@ -28,22 +28,22 @@ const sendMessage = async (req, res) => {
   try {
     const { sessionId } = req.params;
     const { content } = req.body;
-    
+
     if (!content) {
       return res.status(400).json({ success: false, message: 'Message content is required' });
     }
 
     const aiMessage = await chatService.sendMessage(sessionId, content);
-    
-    res.status(200).json({ 
-      success: true, 
-      data: aiMessage 
+
+    res.status(200).json({
+      success: true,
+      data: aiMessage
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to send message', 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send message',
+      error: error.message
     });
   }
 };
@@ -52,16 +52,34 @@ const getSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
     const session = await chatService.getSession(sessionId);
-    
-    res.status(200).json({ 
-      success: true, 
-      data: session 
+
+    res.status(200).json({
+      success: true,
+      data: session
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch chat session', 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch chat session',
+      error: error.message
+    });
+  }
+};
+
+const getMyChats = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const chats = await chatService.getChatsByUser(userId);
+
+    res.status(200).json({
+      success: true,
+      data: chats
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch user chats',
+      error: error.message
     });
   }
 };
@@ -69,5 +87,6 @@ const getSession = async (req, res) => {
 module.exports = {
   createSession,
   sendMessage,
-  getSession
+  getSession,
+  getMyChats
 };
