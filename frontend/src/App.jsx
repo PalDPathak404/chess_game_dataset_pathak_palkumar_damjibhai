@@ -1,10 +1,19 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import GlobalLayout from './layouts/GlobalLayout';
+import { Home, NotFound } from './pages';
+import './styles/index.css';
+
 function App() {
   return (
-    <div>
-      <h1>Knightly</h1>
-      <h2>AI Powered Chess Review Platform</h2>
-      <p>Frontend under active development.</p>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<GlobalLayout />}>
+          <Route index element={<Home />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </Router>
   );
 }
 
