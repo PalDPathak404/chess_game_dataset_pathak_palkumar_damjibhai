@@ -11,7 +11,7 @@ const importPgn = async (req, res) => {
       });
     }
 
-    const userId = req.user?.userId;
+    const userId = req.user?._id ?? null;
     const match = await importService.importPgn(pgn, userId);
 
     if (!match) {
@@ -45,7 +45,7 @@ const importPgnWithReview = async (req, res) => {
       });
     }
 
-    const userId = req.user?.userId;
+    const userId = req.user?._id ?? null;
     const result = await importService.importPgnWithReview(pgn, userId);
 
     if (!result) {
@@ -68,7 +68,24 @@ const importPgnWithReview = async (req, res) => {
   }
 };
 
+const getMyImports = async (req, res) => {
+  try {
+    const imports = await importService.getImportsByUser(req.user._id);
+
+    res.status(200).json({
+      success: true,
+      data: imports
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch imports'
+    });
+  }
+};
+
 module.exports = {
   importPgn,
-  importPgnWithReview
+  importPgnWithReview,
+  getMyImports
 };

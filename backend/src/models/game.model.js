@@ -53,7 +53,8 @@ const gameSchema = new mongoose.Schema({
     importedByUser: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      default: null
+      default: null,
+      index: true
     },
     site: { type: String },
     event: { type: String }

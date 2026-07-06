@@ -32,7 +32,15 @@ const importPgnWithReview = async (rawPgn, userId = null) => {
   };
 };
 
+const getImportsByUser = async (userId) => {
+  return Game.find({ sourceType: 'imported', 'importMetadata.importedByUser': userId })
+    .select('gameId players opening turns winner victoryStatus importMetadata.importedAt importMetadata.site importMetadata.event sourceType createdAt')
+    .sort({ createdAt: -1 })
+    .lean();
+};
+
 module.exports = {
   importPgn,
-  importPgnWithReview
+  importPgnWithReview,
+  getImportsByUser
 };
