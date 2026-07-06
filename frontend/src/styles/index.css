@@ -1117,6 +1117,19 @@ a {
   background-color: transparent;
 }
 
+.rev-move-btn {
+  transition: background-color 0.2s ease, border-left-color 0.2s ease;
+}
+
+.rev-move-btn:hover:not(.rev-move-btn--empty) {
+  background-color: var(--bg-secondary);
+}
+
+.rev-move-btn--active {
+  background-color: var(--bg-secondary);
+  font-weight: 600;
+}
+
 .rev-stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
