@@ -35,7 +35,8 @@ const chatSessionSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    default: null
+    default: null,
+    index: true
   }
 }, { 
   timestamps: true 

@@ -35,18 +35,13 @@ const sendMessage = async (sessionId, content) => {
   const session = await ChatSession.findById(sessionId).populate('review');
   if (!session) throw new Error('Chat session not found');
 
-  // Add user message
   session.messages.push({
     role: 'user',
     content
   });
 
-  // Generate mocked AI response with context
-  // In the future, this is where we assemble the prompt, including session history,
-  // review data, and send it to the OpenAI API.
   const aiResponse = generateMockedResponse(content, session.review);
 
-  // Add assistant message
   session.messages.push({
     role: 'assistant',
     content: aiResponse.content,
@@ -55,7 +50,6 @@ const sendMessage = async (sessionId, content) => {
 
   await session.save();
 
-  // Return the newly added assistant message
   return session.messages[session.messages.length - 1];
 };
 
@@ -65,8 +59,16 @@ const getSession = async (sessionId) => {
   return session;
 };
 
+const getChatsByUser = async (userId) => {
+  return await ChatSession.find({ createdBy: userId })
+    .select('review status createdAt updatedAt')
+    .sort({ createdAt: -1 })
+    .lean();
+};
+
 module.exports = {
   createSession,
   sendMessage,
-  getSession
+  getSession,
+  getChatsByUser
 };
