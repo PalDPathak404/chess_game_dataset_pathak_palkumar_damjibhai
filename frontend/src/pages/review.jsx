@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Chessboard } from 'react-chessboard';
 import {
   Play, SkipBack, SkipForward, FastForward,
   Settings, Target, Zap, AlertTriangle, Lightbulb,
-  RefreshCw, AlertCircle, BarChart3
+  RefreshCw, AlertCircle, BarChart3, RotateCcw,
+  ChevronFirst, ChevronLast
 } from 'lucide-react';
 import { fetchReview } from '../services/review.service';
+import { useChessPlayback } from '../hooks/useChessPlayback';
 
 const CLASSIFICATION_COLORS = {
   brilliant: '#a78bfa',
@@ -147,7 +149,9 @@ const TopReviewBar = ({ match, summary, createdAt }) => {
   );
 };
 
-const MoveTimeline = ({ analyzedMoves, activeMove, onMoveSelect }) => {
+const MoveTimeline = ({ analyzedMoves, currentMoveIndex, onMoveSelect }) => {
+  const scrollRef = useRef(null);
+
   const groupedMoves = useMemo(() => {
     if (!analyzedMoves?.length) return [];
     const groups = [];
@@ -155,28 +159,37 @@ const MoveTimeline = ({ analyzedMoves, activeMove, onMoveSelect }) => {
       const m = analyzedMoves[i];
       if (m.player === 'white') {
         const blackMove = analyzedMoves[i + 1]?.player === 'black' ? analyzedMoves[i + 1] : null;
-        groups.push({ num: m.moveNumber, w: m, b: blackMove });
+        groups.push({ num: m.moveNumber, w: { ...m, index: i }, b: blackMove ? { ...blackMove, index: i + 1 } : null });
         if (blackMove) i++;
       } else {
-        groups.push({ num: m.moveNumber, w: null, b: m });
+        groups.push({ num: m.moveNumber, w: null, b: { ...m, index: i } });
       }
     }
     return groups;
   }, [analyzedMoves]);
+
+  useEffect(() => {
+    if (scrollRef.current && currentMoveIndex >= 0) {
+      const activeEl = scrollRef.current.querySelector('.rev-move-btn--active');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [currentMoveIndex]);
 
   return (
     <aside className="rev-timeline">
       <div className="rev-timeline-header">
         <h3>Move Timeline</h3>
       </div>
-      <div className="rev-timeline-scroll">
+      <div className="rev-timeline-scroll" ref={scrollRef}>
         {groupedMoves.map(g => (
           <div key={`${g.num}-${g.w ? 'w' : 'b'}`} className="rev-move-row">
             <div className="rev-move-num">{g.num}.</div>
             {g.w ? (
               <button
-                className={`rev-move-btn ${activeMove === `${g.num}w` ? 'rev-move-btn--active' : ''}`}
-                onClick={() => onMoveSelect(`${g.num}w`, g.w)}
+                className={`rev-move-btn ${currentMoveIndex === g.w.index ? 'rev-move-btn--active' : ''}`}
+                onClick={() => onMoveSelect(g.w.index)}
                 style={{ borderLeft: `3px solid ${CLASSIFICATION_COLORS[g.w.classification] || 'transparent'}` }}
               >
                 {g.w.notation}
@@ -184,8 +197,8 @@ const MoveTimeline = ({ analyzedMoves, activeMove, onMoveSelect }) => {
             ) : <div className="rev-move-btn rev-move-btn--empty" />}
             {g.b ? (
               <button
-                className={`rev-move-btn ${activeMove === `${g.num}b` ? 'rev-move-btn--active' : ''}`}
-                onClick={() => onMoveSelect(`${g.num}b`, g.b)}
+                className={`rev-move-btn ${currentMoveIndex === g.b.index ? 'rev-move-btn--active' : ''}`}
+                onClick={() => onMoveSelect(g.b.index)}
                 style={{ borderLeft: `3px solid ${CLASSIFICATION_COLORS[g.b.classification] || 'transparent'}` }}
               >
                 {g.b.notation}
@@ -198,42 +211,83 @@ const MoveTimeline = ({ analyzedMoves, activeMove, onMoveSelect }) => {
   );
 };
 
-const BoardSection = () => (
-  <main className="rev-board-section">
-    <div className="rev-board-wrapper">
-      <div className="rev-board-container">
-        <Chessboard
-          id="ReviewWorkspaceBoard"
-          customDarkSquareStyle={{ backgroundColor: '#27272a' }}
-          customLightSquareStyle={{ backgroundColor: '#52525b' }}
-          animationDuration={300}
-        />
-      </div>
-
-      <div className="rev-controls">
-        <div className="rev-controls-playback">
-          <button className="rev-icon-btn" title="Previous Move"><SkipBack size={18} /></button>
-          <button className="rev-icon-btn rev-icon-btn--play" title="Play/Pause"><Play size={20} /></button>
-          <button className="rev-icon-btn" title="Next Move"><SkipForward size={18} /></button>
+const BoardSection = ({ 
+  currentFen, 
+  currentMoveIndex, 
+  maxIndex, 
+  onNext, 
+  onPrev, 
+  onStart, 
+  onEnd 
+}) => {
+  return (
+    <main className="rev-board-section">
+      <div className="rev-board-wrapper">
+        <div className="rev-board-container">
+          <Chessboard
+            id="ReviewWorkspaceBoard"
+            position={currentFen}
+            customDarkSquareStyle={{ backgroundColor: '#27272a' }}
+            customLightSquareStyle={{ backgroundColor: '#52525b' }}
+            animationDuration={300}
+            arePiecesDraggable={false}
+          />
         </div>
 
-        <div className="rev-controls-graph">
-          <div className="rev-graph-placeholder">
-            <div className="rev-graph-line" style={{ width: '40%', backgroundColor: 'var(--text-primary)' }} />
-            <div className="rev-graph-line" style={{ width: '60%', backgroundColor: 'var(--text-muted)' }} />
+        <div className="rev-controls">
+          <div className="rev-controls-playback">
+            <button 
+              className="rev-icon-btn" 
+              title="First Move" 
+              onClick={onStart}
+              disabled={currentMoveIndex === -1}
+            >
+              <ChevronFirst size={18} />
+            </button>
+            <button 
+              className="rev-icon-btn" 
+              title="Previous Move" 
+              onClick={onPrev}
+              disabled={currentMoveIndex === -1}
+            >
+              <SkipBack size={18} />
+            </button>
+            <button 
+              className="rev-icon-btn" 
+              title="Next Move" 
+              onClick={onNext}
+              disabled={currentMoveIndex === maxIndex}
+            >
+              <SkipForward size={18} />
+            </button>
+            <button 
+              className="rev-icon-btn" 
+              title="Last Move" 
+              onClick={onEnd}
+              disabled={currentMoveIndex === maxIndex}
+            >
+              <ChevronLast size={18} />
+            </button>
+          </div>
+
+          <div className="rev-controls-graph">
+            <div className="rev-graph-placeholder" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                {currentMoveIndex === -1 ? 'Starting Position' : `Move ${currentMoveIndex + 1} of ${maxIndex + 1}`}
+              </span>
+            </div>
+          </div>
+
+          <div className="rev-controls-settings">
+            <button className="rev-icon-btn" title="Settings"><Settings size={18} /></button>
           </div>
         </div>
-
-        <div className="rev-controls-settings">
-          <button className="rev-icon-btn" title="Speed"><FastForward size={18} /></button>
-          <button className="rev-icon-btn" title="Settings"><Settings size={18} /></button>
-        </div>
       </div>
-    </div>
-  </main>
-);
+    </main>
+  );
+};
 
-const AICoachPanel = ({ summary, selectedMove }) => {
+const AICoachPanel = ({ summary, analyzedMoves, currentMoveIndex }) => {
   const strengths = useMemo(() => {
     const items = [];
     if (summary?.brilliantMoves > 0) items.push(`${summary.brilliantMoves} brilliant move${summary.brilliantMoves > 1 ? 's' : ''} played.`);
@@ -257,6 +311,8 @@ const AICoachPanel = ({ summary, selectedMove }) => {
     return summary.keyInsights;
   }, [summary]);
 
+  const selectedMove = currentMoveIndex >= 0 && analyzedMoves ? analyzedMoves[currentMoveIndex] : null;
+
   return (
     <aside className="rev-coach">
       <div className="rev-coach-header">
@@ -264,6 +320,24 @@ const AICoachPanel = ({ summary, selectedMove }) => {
       </div>
 
       <div className="rev-coach-scroll">
+        {selectedMove && (
+          <div className="rev-insight-card rev-insight-card--move">
+            <div className="rev-insight-header">
+              <Target size={16} className="rev-insight-icon" />
+              <h3>
+                Move {selectedMove.moveNumber}. {selectedMove.notation}
+                <span className="rev-move-badge" style={{ backgroundColor: CLASSIFICATION_COLORS[selectedMove.classification] }}>
+                  {selectedMove.classification}
+                </span>
+              </h3>
+            </div>
+            <p className="rev-insight-text">{selectedMove.explanation}</p>
+            {selectedMove.suggestedMove && (
+              <p className="rev-insight-suggested">Better: <strong>{selectedMove.suggestedMove}</strong></p>
+            )}
+          </div>
+        )}
+
         <div className="rev-insight-card">
           <div className="rev-insight-header">
             <BarChart3 size={16} className="rev-insight-icon" />
@@ -306,24 +380,6 @@ const AICoachPanel = ({ summary, selectedMove }) => {
             {recommendations.map((r, i) => <li key={i}>{r}</li>)}
           </ul>
         </div>
-
-        {selectedMove && (
-          <div className="rev-insight-card rev-insight-card--move">
-            <div className="rev-insight-header">
-              <Target size={16} className="rev-insight-icon" />
-              <h3>
-                Move {selectedMove.moveNumber}. {selectedMove.notation}
-                <span className="rev-move-badge" style={{ backgroundColor: CLASSIFICATION_COLORS[selectedMove.classification] }}>
-                  {selectedMove.classification}
-                </span>
-              </h3>
-            </div>
-            <p className="rev-insight-text">{selectedMove.explanation}</p>
-            {selectedMove.suggestedMove && (
-              <p className="rev-insight-suggested">Better: <strong>{selectedMove.suggestedMove}</strong></p>
-            )}
-          </div>
-        )}
       </div>
     </aside>
   );
@@ -334,8 +390,6 @@ export const ReviewWorkspace = () => {
   const [review, setReview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeMove, setActiveMove] = useState(null);
-  const [selectedMoveData, setSelectedMoveData] = useState(null);
 
   const loadReview = useCallback(async () => {
     setLoading(true);
@@ -358,10 +412,16 @@ export const ReviewWorkspace = () => {
     if (id) loadReview();
   }, [id, loadReview]);
 
-  const handleMoveSelect = useCallback((moveKey, moveData) => {
-    setActiveMove(moveKey);
-    setSelectedMoveData(moveData);
-  }, []);
+  const {
+    currentMoveIndex,
+    currentFen,
+    maxIndex,
+    goToStart,
+    goToEnd,
+    goToMoveIndex,
+    nextMove,
+    prevMove
+  } = useChessPlayback(review?.analyzedMoves);
 
   if (error && !loading) {
     return (
@@ -375,9 +435,17 @@ export const ReviewWorkspace = () => {
     <div className={`rev-workspace ${!loading ? 'rev-workspace--ready' : ''}`}>
       {loading ? <TopReviewBarSkeleton /> : <TopReviewBar match={review?.match} summary={review?.summary} createdAt={review?.createdAt} />}
       <div className="rev-layout">
-        {loading ? <TimelineSkeleton /> : <MoveTimeline analyzedMoves={review?.analyzedMoves} activeMove={activeMove} onMoveSelect={handleMoveSelect} />}
-        <BoardSection />
-        {loading ? <CoachSkeleton /> : <AICoachPanel summary={review?.summary} selectedMove={selectedMoveData} />}
+        {loading ? <TimelineSkeleton /> : <MoveTimeline analyzedMoves={review?.analyzedMoves} currentMoveIndex={currentMoveIndex} onMoveSelect={goToMoveIndex} />}
+        <BoardSection 
+          currentFen={currentFen} 
+          currentMoveIndex={currentMoveIndex}
+          maxIndex={maxIndex}
+          onNext={nextMove}
+          onPrev={prevMove}
+          onStart={goToStart}
+          onEnd={goToEnd}
+        />
+        {loading ? <CoachSkeleton /> : <AICoachPanel summary={review?.summary} analyzedMoves={review?.analyzedMoves} currentMoveIndex={currentMoveIndex} />}
       </div>
     </div>
   );
