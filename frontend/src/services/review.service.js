@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:5000/api/v1';
+const API_BASE = import.meta.env.VITE_API_URL;
 
 export const fetchReview = async (reviewId) => {
   const { data } = await axios.get(`${API_BASE}/reviews/${reviewId}`);
